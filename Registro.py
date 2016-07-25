@@ -18,6 +18,46 @@ def menu_Continentes():
     aux = int(op)-1
     cont = listCont[aux]
     return cont
+    
+    class Registro:
+    def __init__(self):
+        self.continente = ""
+        self.pais = ""
+        self.tecnico = ""
+        self.jugadores = []
+
+    def inscripcion(self):
+        os.system("cls")
+        continente = menu_Continentes()
+        print("\n Ingrese los siguentes Datos\nContinente: ",continente)
+        pais = str(input("Pais: "))
+        tecnico = str(input("Tecnico: "))
+
+        conexion = sqlite3.connect("Registro.s3db")
+        cursor = conexion.cursor()
+        cursor.execute("insert into Registro (Continente, Pais, Tecnico) values ('"+continente+"','"+pais+"','"+tecnico+"')")
+        conexion.commit()
+        conexion.close()
+        print("Se registro con exito!")
+
+    def mostrar_Reg(self):
+        os.system("cls")
+        cont = menu_Continentes()
+        conexion = sqlite3.connect("Registro.s3db")
+        cursor = conexion.cursor()
+        cursor.execute("SELECT * from Registro")
+        if(cont == "Africa"):
+            for i in cursor:
+                if (i[0] == "Africa"):
+                    print("Pais: ", i[1])
+                    print("Tecnico: ", i[2])
+                    print("---------------")
+        elif(cont == "Asia"):
+            for i in cursor:
+                if (i[0] == "Asia"):
+                    print("Pais: ", i[1])
+                    print("Tecnico: ", i[2])
+                    print("---------------")
 
 
        
