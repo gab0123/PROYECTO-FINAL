@@ -19,7 +19,7 @@ def menu_Continentes():
     cont = listCont[aux]
     return cont
     
-    class Registro:
+class Registro:
     def __init__(self):
         self.continente = ""
         self.pais = ""
@@ -49,14 +49,16 @@ def menu_Continentes():
         if(cont == "Africa"):
             for i in cursor:
                 if (i[0] == "Africa"):
-                    print("Pais: ", i[1])
-                    print("Tecnico: ", i[2])
+                    print("ID: {}".format(i[0]))
+                    print("Pais: {}".format(i[2]))
+                    print("Tecnico: {}".format(i[3]))
                     print("---------------")
         elif(cont == "Asia"):
             for i in cursor:
                 if (i[0] == "Asia"):
-                    print("Pais: ", i[1])
-                    print("Tecnico: ", i[2])
+                    print("ID: {}".format(i[0]))
+                    print("Pais: {}".format(i[1]))
+                    print("Tecnico: {}".format(i[2]))
                     print("---------------")
 
 
