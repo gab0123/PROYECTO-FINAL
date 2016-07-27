@@ -61,7 +61,22 @@ class Registro:
                     print("Tecnico: {}".format(i[2]))
                     print("---------------")
 
-
+    def modificar(self):
+        self.mostrar_Reg()
+        codigo = str(input("Ingrese el Codigo del que desea modificar: "))
+        os.system("cls")
+        print("Ingresando los nuevos Datos")
+        continente = menu_Continentes()
+        pais = str(input("Pais: "))
+        tecnico = str(input("Tecnico: "))
+        conexion = sqlite3.connect("Registro.s3db")
+        cursor = conexion.cursor()
+        cursor.execute("update Registro set Continente = '"+continente+"', Pais = '"+pais+"', Tecnico = '"+tecnico+"' where ID = '"+codigo+"'")
+        conexion.commit()
+        conexion.close()
+        os.system("cls")
+        print("Su Modificacion se Realizo con Exito!")
+        time.sleep(2)
        
                   
                
