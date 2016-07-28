@@ -92,7 +92,8 @@ class Registro:
                     print("Pais: {}".format(i[2]))
                     print("Tecnico: {}".format(i[3]))
                     print("------------------")
-
+    
+    
     def modificar(self):
         self.mostrar_Reg()
         codigo = str(input("Ingrese el Codigo del que desea modificar: "))
@@ -109,7 +110,21 @@ class Registro:
         os.system("cls")
         print("Su Modificacion se Realizo con Exito!")
         time.sleep(2)
-       
+        
+def registro_Menu():
+    op = 0
+    r = Registro()
+    listMenu = ["Inscripcion","Modificar Inscripcion","Monstrar Paises Inscritos","Eliminar Inscripcion","Atras"]
+    while(op not in [1,2,3,4,5]):
+        print("\n\tREGISTRO")
+        print(" 1.- {}\n 2.- {}\n 3.- {}\n 4.- {}\n 5.- {}\n".format(listMenu[0],listMenu[1],listMenu[2],listMenu[3],listMenu[4]))
+        op = input("Ingrese una opcion: ")
+        try:
+            op = int(op)
+            if op not in [1,2,3,4,5,6]:
+                print("Opcion incorrecta, Vuelva a intentarlo!")
+                time.sleep(2)
+                os.system("cls")
                   
 def menu():
     op = "0"
