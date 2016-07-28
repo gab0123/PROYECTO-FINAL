@@ -125,6 +125,22 @@ def registro_Menu():
                 print("Opcion incorrecta, Vuelva a intentarlo!")
                 time.sleep(2)
                 os.system("cls")
+        except ValueError:
+            print("Ingrese solo digitos!")
+            time.sleep(5)
+            op = 0
+
+    if(op == 1):
+        r.inscripcion()
+    elif(op == 2):
+        r.modificar()
+    elif(op == 3):
+        r.mostrar_Reg()
+    elif(op == 4):
+        r.eliminar()
+    elif(op == 5):
+        menu()
+        
                   
 def menu():
     op = "0"
