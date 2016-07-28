@@ -2,6 +2,12 @@ import os
 import sys
 import time
 import sqlite3
+def informacion():
+    archi=open('info.txt','r')
+    lineas=archi.readlines()
+    for li in lineas:
+        print (li)
+    archi.close()
 
 def menu_Continentes():
     op = "0"
