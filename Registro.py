@@ -79,4 +79,19 @@ class Registro:
         time.sleep(2)
        
                   
-               
+def menu():
+    op = "0"
+    listMenu = ["Informacion","Registro","Equipos","Eliminatorias","Mundial","Campeon","Salir"]
+    while(op == "0"):
+        print("\nCOPA MUNDIAL DE LA FIFA RUSIA 2018\n")
+        print(" 1.- {}\n 2.- {}\n 3.- {}\n 4.- {}\n 5.- {}\n 6.- {}\n 7.- {}".format(listMenu[0],listMenu[1],listMenu[2],listMenu[3],listMenu[4],listMenu[5],listMenu[6]))
+        op = str(input("\nIngrese un opcion: "))
+        if op not in ["1","2","3","4","5","6","7"]:
+            print("Opcion incorrecta, Vuelva a intentarlo!")
+            time.sleep(2)
+            op = "0"
+        os.system("cls")
+    if (op == "1"):
+        informacion()
+    elif (op == "2"):
+        registro_Menu()
