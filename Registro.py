@@ -60,6 +60,38 @@ class Registro:
                     print("Pais: {}".format(i[1]))
                     print("Tecnico: {}".format(i[2]))
                     print("---------------")
+        elif(cont == "Europa"):
+            print("\tEUROPA")
+            for i in cursor:
+                if (i[1] == "Europa"):
+                    print("ID: {}".format(i[0]))
+                    print("Pais: {}".format(i[2]))
+                    print("Tecnico: {}".format(i[3]))
+                    print("------------------")
+        elif(cont == "N/Centro America y Caribe"):
+            print("\tN/CENTRO AMERICA Y CARIBE")
+            for i in cursor:
+                if (i[1] == "N/Centro America y Caribe"):
+                    print("ID: {}".format(i[0]))
+                    print("Pais: {}".format(i[2]))
+                    print("Tecnico: {}".format(i[3]))
+                    print("------------------")
+        elif(cont == "Oceania"):
+            print("\tOCEANIA")
+            for i in cursor:
+                if (i[1] == "Oceania"):
+                    print("ID: {}".format(i[0]))
+                    print("Pais: {}".format(i[2]))
+                    print("Tecnico: {}".format(i[3]))
+                    print("------------------")
+        elif(cont == "Sudamerica"):
+            print("\tSUDAMERICA")
+            for i in cursor:
+                if (i[1] == "Sudamerica"):
+                    print("ID: {}".format(i[0]))
+                    print("Pais: {}".format(i[2]))
+                    print("Tecnico: {}".format(i[3]))
+                    print("------------------")
 
     def modificar(self):
         self.mostrar_Reg()
