@@ -111,6 +111,18 @@ class Registro:
         print("Su Modificacion se Realizo con Exito!")
         time.sleep(2)
         
+    def eliminar(self):
+        self.mostrar_Reg()
+        codigo = str(input("Ingrese el Codigo del que desea modificar: "))
+        os.system("cls")
+        conexion = sqlite3.connect("Registro.s3db")
+        cursor = conexion.cursor()
+        cursor.execute("SELECT * from Registro")
+        cursor.execute("delete from Registro where ID = '"+codigo+"'")
+        conexion.commit()
+        conexion.close()
+        print("Pais Eliminado!")
+        
 def registro_Menu():
     op = 0
     r = Registro()
