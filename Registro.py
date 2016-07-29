@@ -176,3 +176,19 @@ def menu():
         informacion()
     elif (op == "2"):
         registro_Menu()
+        
+def salir():
+    os.system("cls")
+    u=input("Estas seguro de que desea salir del Mundial Rusia 2018(SI/NO): ")
+    if u=="SI" or u=="si" or u=="Si":
+        print("Gracias por participar en el Mundial Rusia 2018.")
+        import sys
+        sys.exit(5)
+    elif u=="NO" or u=="no" or u=="No":
+        menu()
+        
+    else:
+        print("Ingrese un valor correcto.")
+        salir()
+salir()
+
