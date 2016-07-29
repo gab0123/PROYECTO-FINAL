@@ -10,7 +10,7 @@ Trabajo Final de Programación II es un proyecto desarrollado en Python con base
 Evento mundial deportivo de la FIFA, basado en un menú que como primera opción nos nuestra información de forma general sobre la Copa Mundial de la FIFA , nos permite registrarnos de acuerdo al continente,país, etc ; el menú también nos permite también poder visualizar los equipos inscritos, organizar las eliminatorias para las clasificaciones al mundial y por último poder ver resultados y obtener al campeón.
 
 
-![Imagen_mundialrusia2018](/Imagenes/Imagen_mundialrusia2018.jpg "Imagen_mundialrusia2018")
+                                            ![Imagen_mundialrusia2018](/Imagenes/Imagen_mundialrusia2018.jpg "Imagen_mundialrusia2018")
 
 
 ##OLIMPIADAS CACHIMBO 2017
@@ -18,4 +18,4 @@ Evento mundial deportivo de la FIFA, basado en un menú que como primera opción
 Evento universitario deportivo entre interescuelas de las distintas áreas de la Universidad Nacional de San Agustin, teniendo como participantes a alumnos de primer año, basado en un menú de opciones en las cuales podemos ver información general sobre el evento, registrar a las distintas áreas de la universidad, escuelas y participantes; poder elegir entre los distintos deportes a participar, organizar eliminatorias, clasificaciones, ver resultados y obtener al campeón.
 
 
-![deporte](/Imagenes/deporte.jpg "deporte")
+                                             ![deporte](/Imagenes/deporte.jpg "deporte")
