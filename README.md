@@ -2,7 +2,7 @@
 ##ORGANIZACIÓN DE EVENTOS DEPORTIVOS
 
 
-Trabajo Final de Programación II es un proyecto desarrollado en Python con base de datos SQL Lit, que nos permitirá organizar dos eventos deportivos; para registrar las actividades, equipos participantes, gestores, encuentros, resultados y clasificaciones. Y son los que se muestran a continuación:
+Trabajo Final de Programación II es un proyecto desarrollado en Python con base de datos SQL Lite, que nos permitirá organizar dos eventos deportivos; para registrar las actividades, equipos participantes, gestores, encuentros, resultados y clasificaciones. Y son los que se muestran a continuación:
 
 
 ##MUNDIAL RUSIA 2018
