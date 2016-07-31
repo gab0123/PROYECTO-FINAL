@@ -192,3 +192,17 @@ def salir():
         salir()
 salir()
 
+def datosPP(pais1,pais2):
+    datosP1 = []
+    datosP2 = []
+    conexion = sqlite3.connect("mundial.s3db")
+    cursor = conexion.cursor()
+    cursor.execute("SELECT * from Grupos")
+    for i in cursor:
+        if(i[1] == pais1):
+            for j in i:
+                datosP1.append(j)
+        elif(i[1] == pais2):
+            for j in i:
+                datosP2.append(j)
+    return (datosP1,datosP2)
