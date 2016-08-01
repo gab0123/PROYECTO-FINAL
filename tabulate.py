@@ -902,4 +902,184 @@ def tabulate(tabular_data, headers=(), tablefmt="simple",
     else:
         width_fn = len
    
+    # format rows and columns, convert numeric values to strings
+    cols = list(zip(*list_of_lists))
+    coltypes = list(map(_column_type, cols))
+    cols = [[_format(v, ct, floatfmt, missingval, has_invisible) for v in c]
+             for c,ct in zip(cols, coltypes)]
 
+    # align columns
+    aligns = [numalign if ct in [int,float] else stralign for ct in coltypes]
+    minwidths = [width_fn(h) + MIN_PADDING for h in headers] if headers else [0]*len(cols)
+    cols = [_align_column(c, a, minw, has_invisible)
+            for c, a, minw in zip(cols, aligns, minwidths)]
+
+    if headers:
+        # align headers and add headers
+        t_cols = cols or [['']] * len(headers)
+        t_aligns = aligns or [stralign] * len(headers)
+        minwidths = [max(minw, width_fn(c[0])) for minw, c in zip(minwidths, t_cols)]
+        headers = [_align_header(h, a, minw)
+                   for h, a, minw in zip(headers, t_aligns, minwidths)]
+        rows = list(zip(*cols))
+    else:
+        minwidths = [width_fn(c[0]) for c in cols]
+        rows = list(zip(*cols))
+
+    if not isinstance(tablefmt, TableFormat):
+        tablefmt = _table_formats.get(tablefmt, _table_formats["simple"])
+
+    return _format_table(tablefmt, headers, rows, minwidths, aligns)
+
+
+def _build_simple_row(padded_cells, rowfmt):
+    "Format row according to DataRow format without padding."
+    begin, sep, end = rowfmt
+    return (begin + sep.join(padded_cells) + end).rstrip()
+
+
+def _build_row(padded_cells, colwidths, colaligns, rowfmt):
+    "Return a string which represents a row of data cells."
+    if not rowfmt:
+        return None
+    if hasattr(rowfmt, "__call__"):
+        return rowfmt(padded_cells, colwidths, colaligns)
+    else:
+        return _build_simple_row(padded_cells, rowfmt)
+
+
+def _build_line(colwidths, colaligns, linefmt):
+    "Return a string which represents a horizontal line."
+    if not linefmt:
+        return None
+    if hasattr(linefmt, "__call__"):
+        return linefmt(colwidths, colaligns)
+    else:
+        begin, fill, sep,  end = linefmt
+        cells = [fill*w for w in colwidths]
+        return _build_simple_row(cells, (begin, sep, end))
+
+
+def _pad_row(cells, padding):
+    if cells:
+        pad = " "*padding
+        padded_cells = [pad + cell + pad for cell in cells]
+        return padded_cells
+    else:
+        return cells
+
+
+def _format_table(fmt, headers, rows, colwidths, colaligns):
+    """Produce a plain-text representation of the table."""
+    lines = []
+    hidden = fmt.with_header_hide if (headers and fmt.with_header_hide) else []
+    pad = fmt.padding
+    headerrow = fmt.headerrow
+
+    padded_widths = [(w + 2*pad) for w in colwidths]
+    padded_headers = _pad_row(headers, pad)
+    padded_rows = [_pad_row(row, pad) for row in rows]
+
+    if fmt.lineabove and "lineabove" not in hidden:
+        lines.append(_build_line(padded_widths, colaligns, fmt.lineabove))
+
+    if padded_headers:
+        lines.append(_build_row(padded_headers, padded_widths, colaligns, headerrow))
+        if fmt.linebelowheader and "linebelowheader" not in hidden:
+            lines.append(_build_line(padded_widths, colaligns, fmt.linebelowheader))
+
+    if padded_rows and fmt.linebetweenrows and "linebetweenrows" not in hidden:
+        # initial rows with a line below
+        for row in padded_rows[:-1]:
+            lines.append(_build_row(row, padded_widths, colaligns, fmt.datarow))
+            lines.append(_build_line(padded_widths, colaligns, fmt.linebetweenrows))
+        # the last row without a line below
+        lines.append(_build_row(padded_rows[-1], padded_widths, colaligns, fmt.datarow))
+    else:
+        for row in padded_rows:
+            lines.append(_build_row(row, padded_widths, colaligns, fmt.datarow))
+
+    if fmt.linebelow and "linebelow" not in hidden:
+        lines.append(_build_line(padded_widths, colaligns, fmt.linebelow))
+
+    return "\n".join(lines)
+
+
+def _main():
+    """\
+    Usage: tabulate [options] [FILE ...]
+
+    Pretty-print tabular data.
+    See also https://bitbucket.org/astanin/python-tabulate
+
+    FILE                      a filename of the file with tabular data;
+                              if "-" or missing, read data from stdin.
+
+    Options:
+
+    -h, --help                show this message
+    -1, --header              use the first row of data as a table header
+    -o FILE, --output FILE    print table to FILE (default: stdout)
+    -s REGEXP, --sep REGEXP   use a custom column separator (default: whitespace)
+    -F FPFMT, --float FPFMT   floating point number format (default: g)
+    -f FMT, --format FMT      set output table format; supported formats:
+                              plain, simple, grid, fancy_grid, pipe, orgtbl,
+                              rst, mediawiki, html, latex, latex_booktabs, tsv
+                              (default: simple)
+    """
+    import getopt
+    import sys
+    import textwrap
+    usage = textwrap.dedent(_main.__doc__)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],
+                     "h1o:s:F:f:",
+                     ["help", "header", "output", "sep=", "float=", "format="])
+    except getopt.GetoptError as e:
+        print(e)
+        print(usage)
+        sys.exit(2)
+    headers = []
+    floatfmt = "g"
+    tablefmt = "simple"
+    sep = r"\s+"
+    outfile = "-"
+    for opt, value in opts:
+        if opt in ["-1", "--header"]:
+            headers = "firstrow"
+        elif opt in ["-o", "--output"]:
+            outfile = value
+        elif opt in ["-F", "--float"]:
+            floatfmt = value
+        elif opt in ["-f", "--format"]:
+            if value not in tabulate_formats:
+                print("%s is not a supported table format" % value)
+                print(usage)
+                sys.exit(3)
+            tablefmt = value
+        elif opt in ["-s", "--sep"]:
+            sep = value
+        elif opt in ["-h", "--help"]:
+            print(usage)
+            sys.exit(0)
+    files = [sys.stdin] if not args else args
+    with (sys.stdout if outfile == "-" else open(outfile, "w")) as out:
+        for f in files:
+            if f == "-":
+                f = sys.stdin
+            if _is_file(f):
+                _pprint_file(f, headers=headers, tablefmt=tablefmt,
+                             sep=sep, floatfmt=floatfmt, file=out)
+            else:
+                with open(f) as fobj:
+                    _pprint_file(fobj, headers=headers, tablefmt=tablefmt,
+                                 sep=sep, floatfmt=floatfmt, file=out)
+
+
+def _pprint_file(fobject, headers, tablefmt, sep, floatfmt, file):
+    rows = fobject.readlines()
+    table = [re.split(sep, r.rstrip()) for r in rows]
+    print(tabulate(table, headers, tablefmt, floatfmt=floatfmt), file=file)
+
+if __name__ == "__main__":
+    _main()
