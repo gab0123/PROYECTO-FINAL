@@ -107,4 +107,75 @@ def _pipe_line_with_colons(colwidths, colaligns):
     segments = [_pipe_segment_with_colons(a, w) for a, w in zip(colaligns, colwidths)]
     return "|" + "|".join(segments) + "|"
 
+def _mediawiki_row_with_attrs(separator, cell_values, colwidths, colaligns):
+    alignment = { "left":    '',
+                  "right":   'align="right"| ',
+                  "center":  'align="center"| ',
+                  "decimal": 'align="right"| ' }
+    # hard-coded padding _around_ align attribute and value together
+    # rather than padding parameter which affects only the value
+    values_with_attrs = [' ' + alignment.get(a, '') + c + ' '
+                         for c, a in zip(cell_values, colaligns)]
+    colsep = separator*2
+    return (separator + colsep.join(values_with_attrs)).rstrip()
+
+
+def _html_row_with_attrs(celltag, cell_values, colwidths, colaligns):
+    alignment = { "left":    '',
+                  "right":   ' style="text-align: right;"',
+                  "center":  ' style="text-align: center;"',
+                  "decimal": ' style="text-align: right;"' }
+    values_with_attrs = ["<{0}{1}>{2}</{0}>".format(celltag, alignment.get(a, ''), c)
+                         for c, a in zip(cell_values, colaligns)]
+    return "<tr>" + "".join(values_with_attrs).rstrip() + "</tr>"
+
+
+def _latex_line_begin_tabular(colwidths, colaligns, booktabs=False):
+    alignment = { "left": "l", "right": "r", "center": "c", "decimal": "r" }
+    tabular_columns_fmt = "".join([alignment.get(a, "l") for a in colaligns])
+    return "\n".join(["\\begin{tabular}{" + tabular_columns_fmt + "}",
+                      "\\toprule" if booktabs else "\hline"])
+
+LATEX_ESCAPE_RULES = {r"&": r"\&", r"%": r"\%", r"$": r"\$", r"#": r"\#",
+                      r"_": r"\_", r"^": r"\^{}", r"{": r"\{", r"}": r"\}",
+                      r"~": r"\textasciitilde{}", "\\": r"\textbackslash{}",
+                      r"<": r"\ensuremath{<}", r">": r"\ensuremath{>}"}
+
+
+def _latex_row(cell_values, colwidths, colaligns):
+    def escape_char(c):
+        return LATEX_ESCAPE_RULES.get(c, c)
+    escaped_values = ["".join(map(escape_char, cell)) for cell in cell_values]
+    rowfmt = DataRow("", "&", "\\\\")
+    return _build_simple_row(escaped_values, rowfmt)
+
+
+_table_formats = {"simple":
+                  TableFormat(lineabove=Line("", "-", "  ", ""),
+                              linebelowheader=Line("", "-", "  ", ""),
+                              linebetweenrows=None,
+                              linebelow=Line("", "-", "  ", ""),
+                              headerrow=DataRow("", "  ", ""),
+                              datarow=DataRow("", "  ", ""),
+                              padding=0,
+                              with_header_hide=["lineabove", "linebelow"]),
+                  "plain":
+                  TableFormat(lineabove=None, linebelowheader=None,
+                              linebetweenrows=None, linebelow=None,
+                              headerrow=DataRow("", "  ", ""),
+                              datarow=DataRow("", "  ", ""),
+                              padding=0, with_header_hide=None),
+                  "grid":
+                  TableFormat(lineabove=Line("+", "-", "+", "+"),
+                              linebelowheader=Line("+", "=", "+", "+"),
+                              linebetweenrows=Line("+", "-", "+", "+"),
+                              linebelow=Line("+", "-", "+", "+"),
+                              headerrow=DataRow("|", "|", "|"),
+                              datarow=DataRow("|", "|", "|"),
+                              padding=1, with_header_hide=None),
+                  "fancy_grid":
+                  TableFormat(lineabove=Line("╒", "═", "╤", "╕"),
+                              linebelowheader=Line("╞", "═", "╪", "╡"),
+                              linebetweenrows=Line("├", "─", "┼", "┤"),
+                              linebelow=Line("╘", "═", "╧", "╛"),
 
