@@ -540,4 +540,185 @@ def _align_header(header, alignment, width):
         return _padright(width, header)
     elif alignment == "center":
         return _padboth(width, header)
+   elif not alignment:
+        return "{0}".format(header)
+    else:
+        return _padleft(width, header)
+
+
+def _normalize_tabular_data(tabular_data, headers):
+    """Transform a supported data type to a list of lists, and a list of headers.
+
+    Supported tabular data types:
+
+    * list-of-lists or another iterable of iterables
+
+    * list of named tuples (usually used with headers="keys")
+
+    * list of dicts (usually used with headers="keys")
+
+    * list of OrderedDicts (usually used with headers="keys")
+
+    * 2D NumPy arrays
+
+    * NumPy record arrays (usually used with headers="keys")
+
+    * dict of iterables (usually used with headers="keys")
+
+    * pandas.DataFrame (usually used with headers="keys")
+
+    The first row can be used as headers if headers="firstrow",
+    column indices can be used as headers if headers="keys".
+
+    """
+
+    if hasattr(tabular_data, "keys") and hasattr(tabular_data, "values"):
+        # dict-like and pandas.DataFrame?
+        if hasattr(tabular_data.values, "__call__"):
+            # likely a conventional dict
+            keys = tabular_data.keys()
+            rows = list(izip_longest(*tabular_data.values()))  # columns have to be transposed
+        elif hasattr(tabular_data, "index"):
+            # values is a property, has .index => it's likely a pandas.DataFrame (pandas 0.11.0)
+            keys = tabular_data.keys()
+            vals = tabular_data.values  # values matrix doesn't need to be transposed
+            names = tabular_data.index
+            rows = [[v]+list(row) for v,row in zip(names, vals)]
+        else:
+            raise ValueError("tabular data doesn't appear to be a dict or a DataFrame")
+
+        if headers == "keys":
+            headers = list(map(_text_type,keys))  # headers should be strings
+
+    else:  # it's a usual an iterable of iterables, or a NumPy array
+        rows = list(tabular_data)
+
+        if (headers == "keys" and
+            hasattr(tabular_data, "dtype") and
+            getattr(tabular_data.dtype, "names")):
+            # numpy record array
+            headers = tabular_data.dtype.names
+        elif (headers == "keys"
+              and len(rows) > 0
+              and isinstance(rows[0], tuple)
+              and hasattr(rows[0], "_fields")):
+            # namedtuple
+            headers = list(map(_text_type, rows[0]._fields))
+        elif (len(rows) > 0
+              and isinstance(rows[0], dict)):
+            # dict or OrderedDict
+            uniq_keys = set() # implements hashed lookup
+            keys = [] # storage for set
+            if headers == "firstrow":
+                firstdict = rows[0] if len(rows) > 0 else {}
+                keys.extend(firstdict.keys())
+                uniq_keys.update(keys)
+                rows = rows[1:]
+            for row in rows:
+                for k in row.keys():
+                    #Save unique items in input order
+                    if k not in uniq_keys:
+                        keys.append(k)
+                        uniq_keys.add(k)
+            if headers == 'keys':
+                headers = keys
+            elif isinstance(headers, dict):
+                # a dict of headers for a list of dicts
+                headers = [headers.get(k, k) for k in keys]
+                headers = list(map(_text_type, headers))
+            elif headers == "firstrow":
+                if len(rows) > 0:
+                    headers = [firstdict.get(k, k) for k in keys]
+                    headers = list(map(_text_type, headers))
+                else:
+                    headers = []
+            elif headers:
+                raise ValueError('headers for a list of dicts is not a dict or a keyword')
+            rows = [[row.get(k) for k in keys] for row in rows]
+        elif headers == "keys" and len(rows) > 0:
+            # keys are column indices
+            headers = list(map(_text_type, range(len(rows[0]))))
+
+    # take headers from the first row if necessary
+    if headers == "firstrow" and len(rows) > 0:
+        headers = list(map(_text_type, rows[0])) # headers should be strings
+        rows = rows[1:]
+
+    headers = list(map(_text_type,headers))
+    rows = list(map(list,rows))
+
+    # pad with empty headers for initial columns if necessary
+    if headers and len(rows) > 0:
+       nhs = len(headers)
+       ncols = len(rows[0])
+       if nhs < ncols:
+           headers = [""]*(ncols - nhs) + headers
+
+    return rows, headers
+
+
+def tabulate(tabular_data, headers=(), tablefmt="simple",
+             floatfmt="g", numalign="decimal", stralign="left",
+             missingval=""):
+    """Format a fixed width table for pretty printing.
+
+    >>> print(tabulate([[1, 2.34], [-56, "8.999"], ["2", "10001"]]))
+    ---  ---------
+      1      2.34
+    -56      8.999
+      2  10001
+    ---  ---------
+
+    The first required argument (`tabular_data`) can be a
+    list-of-lists (or another iterable of iterables), a list of named
+    tuples, a dictionary of iterables, an iterable of dictionaries,
+    a two-dimensional NumPy array, NumPy record array, or a Pandas'
+    dataframe.
+
+
+    Table headers
+    -------------
+
+    To print nice column headers, supply the second argument (`headers`):
+
+      - `headers` can be an explicit list of column headers
+      - if `headers="firstrow"`, then the first row of data is used
+      - if `headers="keys"`, then dictionary keys or column indices are used
+
+    Otherwise a headerless table is produced.
+
+    If the number of headers is less than the number of columns, they
+    are supposed to be names of the last columns. This is consistent
+    with the plain-text format of R and Pandas' dataframes.
+
+    >>> print(tabulate([["sex","age"],["Alice","F",24],["Bob","M",19]],
+    ...       headers="firstrow"))
+           sex      age
+    -----  -----  -----
+    Alice  F         24
+    Bob    M         19
+
+
+    Column alignment
+    ----------------
+
+    `tabulate` tries to detect column types automatically, and aligns
+    the values properly. By default it aligns decimal points of the
+    numbers (or flushes integer numbers to the right), and flushes
+    everything else to the left. Possible column alignments
+    (`numalign`, `stralign`) are: "right", "center", "left", "decimal"
+    (only for `numalign`), and None (to disable alignment).
+
+
+    Table formats
+    -------------
+
+    `floatfmt` is a format specification used for columns which
+    contain numeric data with a decimal point.
+
+    `None` values are replaced with a `missingval` string:
+
+    >>> print(tabulate([["spam", 1, None],
+    ...                 ["eggs", 42, 3.14],
+    ...                 ["other", None, 2.7]], missingval="?"))
 
