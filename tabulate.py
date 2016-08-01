@@ -359,7 +359,7 @@ def _afterpoint(string):
 
     """
     if _isnumber(string):
-               if _isint(string):
+        if _isint(string):
             return -1
         else:
             pos = string.rfind(".")
