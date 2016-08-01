@@ -359,4 +359,185 @@ def _afterpoint(string):
 
     """
     if _isnumber(string):
+               if _isint(string):
+            return -1
+        else:
+            pos = string.rfind(".")
+            pos = string.lower().rfind("e") if pos < 0 else pos
+            if pos >= 0:
+                return len(string) - pos - 1
+            else:
+                return -1  # no point
+    else:
+        return -1  # not a number
+
+
+def _padleft(width, s, has_invisible=True):
+    """Flush right.
+
+    >>> _padleft(6, '\u044f\u0439\u0446\u0430') == '  \u044f\u0439\u0446\u0430'
+    True
+
+    """
+    iwidth = width + len(s) - len(_strip_invisible(s)) if has_invisible else width
+    fmt = "{0:>%ds}" % iwidth
+    return fmt.format(s)
+
+
+def _padright(width, s, has_invisible=True):
+    """Flush left.
+
+    >>> _padright(6, '\u044f\u0439\u0446\u0430') == '\u044f\u0439\u0446\u0430  '
+    True
+
+    """
+    iwidth = width + len(s) - len(_strip_invisible(s)) if has_invisible else width
+    fmt = "{0:<%ds}" % iwidth
+    return fmt.format(s)
+
+
+def _padboth(width, s, has_invisible=True):
+    """Center string.
+
+    >>> _padboth(6, '\u044f\u0439\u0446\u0430') == ' \u044f\u0439\u0446\u0430 '
+    True
+
+    """
+    iwidth = width + len(s) - len(_strip_invisible(s)) if has_invisible else width
+    fmt = "{0:^%ds}" % iwidth
+    return fmt.format(s)
+
+
+def _strip_invisible(s):
+    "Remove invisible ANSI color codes."
+    if isinstance(s, _text_type):
+        return re.sub(_invisible_codes, "", s)
+    else:  # a bytestring
+        return re.sub(_invisible_codes_bytes, "", s)
+
+
+def _visible_width(s):
+    """Visible width of a printed string. ANSI color codes are removed.
+
+    >>> _visible_width('\x1b[31mhello\x1b[0m'), _visible_width("world")
+    (5, 5)
+
+    """
+    if isinstance(s, _text_type) or isinstance(s, _binary_type):
+        return len(_strip_invisible(s))
+    else:
+        return len(_text_type(s))
+
+
+def _align_column(strings, alignment, minwidth=0, has_invisible=True):
+    """[string] -> [padded_string]
+
+    >>> list(map(str,_align_column(["12.345", "-1234.5", "1.23", "1234.5", "1e+234", "1.0e234"], "decimal")))
+    ['   12.345  ', '-1234.5    ', '    1.23   ', ' 1234.5    ', '    1e+234 ', '    1.0e234']
+
+    >>> list(map(str,_align_column(['123.4', '56.7890'], None)))
+    ['123.4', '56.7890']
+
+    """
+    if alignment == "right":
+        strings = [s.strip() for s in strings]
+        padfn = _padleft
+    elif alignment == "center":
+        strings = [s.strip() for s in strings]
+        padfn = _padboth
+    elif alignment == "decimal":
+        if has_invisible:
+            decimals = [_afterpoint(_strip_invisible(s)) for s in strings]
+        else:
+            decimals = [_afterpoint(s) for s in strings]
+        maxdecimals = max(decimals)
+        strings = [s + (maxdecimals - decs) * " "
+                   for s, decs in zip(strings, decimals)]
+        padfn = _padleft
+    elif not alignment:
+        return strings
+    else:
+        strings = [s.strip() for s in strings]
+        padfn = _padright
+
+    if has_invisible:
+        width_fn = _visible_width
+    else:
+        width_fn = len
+
+    maxwidth = max(max(map(width_fn, strings)), minwidth)
+    padded_strings = [padfn(maxwidth, s, has_invisible) for s in strings]
+    return padded_strings
+
+
+def _more_generic(type1, type2):
+    types = { _none_type: 0, int: 1, float: 2, _binary_type: 3, _text_type: 4 }
+    invtypes = { 4: _text_type, 3: _binary_type, 2: float, 1: int, 0: _none_type }
+    moregeneric = max(types.get(type1, 4), types.get(type2, 4))
+    return invtypes[moregeneric]
+
+
+def _column_type(strings, has_invisible=True):
+    """The least generic type all column values are convertible to.
+
+    >>> _column_type(["1", "2"]) is _int_type
+    True
+    >>> _column_type(["1", "2.3"]) is _float_type
+    True
+    >>> _column_type(["1", "2.3", "four"]) is _text_type
+    True
+    >>> _column_type(["four", '\u043f\u044f\u0442\u044c']) is _text_type
+    True
+    >>> _column_type([None, "brux"]) is _text_type
+    True
+    >>> _column_type([1, 2, None]) is _int_type
+    True
+    >>> import datetime as dt
+    >>> _column_type([dt.datetime(1991,2,19), dt.time(17,35)]) is _text_type
+    True
+
+    """
+    types = [_type(s, has_invisible) for s in strings ]
+    return reduce(_more_generic, types, int)
+
+
+def _format(val, valtype, floatfmt, missingval="", has_invisible=True):
+    """Format a value accoding to its type.
+
+    Unicode is supported:
+
+    >>> hrow = ['\u0431\u0443\u043a\u0432\u0430', '\u0446\u0438\u0444\u0440\u0430'] ; \
+        tbl = [['\u0430\u0437', 2], ['\u0431\u0443\u043a\u0438', 4]] ; \
+        good_result = '\\u0431\\u0443\\u043a\\u0432\\u0430      \\u0446\\u0438\\u0444\\u0440\\u0430\\n-------  -------\\n\\u0430\\u0437             2\\n\\u0431\\u0443\\u043a\\u0438           4' ; \
+        tabulate(tbl, headers=hrow) == good_result
+    True
+
+    """
+    if val is None:
+        return missingval
+
+    if valtype in [int, _long_type, _text_type]:
+        return "{0}".format(val)
+    elif valtype is _binary_type:
+        try:
+            return _text_type(val, "ascii")
+        except TypeError:
+            return _text_type(val)
+    elif valtype is float:
+        is_a_colored_number = has_invisible and isinstance(val, (_text_type, _binary_type))
+        if is_a_colored_number:
+            raw_val = _strip_invisible(val)
+            formatted_val = format(float(raw_val), floatfmt)
+            return val.replace(raw_val, formatted_val)
+        else:
+            return format(float(val), floatfmt)
+    else:
+        return "{0}".format(val)
+
+
+def _align_header(header, alignment, width):
+    if alignment == "left":
+        return _padright(width, header)
+    elif alignment == "center":
+        return _padboth(width, header)
 
