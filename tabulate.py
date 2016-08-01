@@ -721,4 +721,185 @@ def tabulate(tabular_data, headers=(), tablefmt="simple",
     >>> print(tabulate([["spam", 1, None],
     ...                 ["eggs", 42, 3.14],
     ...                 ["other", None, 2.7]], missingval="?"))
+    -----  --  ----
+    spam    1  ?
+    eggs   42  3.14
+    other   ?  2.7
+    -----  --  ----
+
+    Various plain-text table formats (`tablefmt`) are supported:
+    'plain', 'simple', 'grid', 'pipe', 'orgtbl', 'rst', 'mediawiki',
+     'latex', and 'latex_booktabs'. Variable `tabulate_formats` contains the list of
+    currently supported formats.
+
+    "plain" format doesn't use any pseudographics to draw tables,
+    it separates columns with a double space:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ...                 ["strings", "numbers"], "plain"))
+    strings      numbers
+    spam         41.9999
+    eggs        451
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="plain"))
+    spam   41.9999
+    eggs  451
+
+    "simple" format is like Pandoc simple_tables:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ...                 ["strings", "numbers"], "simple"))
+    strings      numbers
+    ---------  ---------
+    spam         41.9999
+    eggs        451
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="simple"))
+    ----  --------
+    spam   41.9999
+    eggs  451
+    ----  --------
+
+    "grid" is similar to tables produced by Emacs table.el package or
+    Pandoc grid_tables:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ...                ["strings", "numbers"], "grid"))
+    +-----------+-----------+
+    | strings   |   numbers |
+    +===========+===========+
+    | spam      |   41.9999 |
+    +-----------+-----------+
+    | eggs      |  451      |
+    +-----------+-----------+
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="grid"))
+    +------+----------+
+    | spam |  41.9999 |
+    +------+----------+
+    | eggs | 451      |
+    +------+----------+
+
+    "fancy_grid" draws a grid using box-drawing characters:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ...                ["strings", "numbers"], "fancy_grid"))
+    ╒═══════════╤═══════════╕
+    │ strings   │   numbers │
+    ╞═══════════╪═══════════╡
+    │ spam      │   41.9999 │
+    ├───────────┼───────────┤
+    │ eggs      │  451      │
+    ╘═══════════╧═══════════╛
+
+    "pipe" is like tables in PHP Markdown Extra extension or Pandoc
+    pipe_tables:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ...                ["strings", "numbers"], "pipe"))
+    | strings   |   numbers |
+    |:----------|----------:|
+    | spam      |   41.9999 |
+    | eggs      |  451      |
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="pipe"))
+    |:-----|---------:|
+    | spam |  41.9999 |
+    | eggs | 451      |
+
+    "orgtbl" is like tables in Emacs org-mode and orgtbl-mode. They
+    are slightly different from "pipe" format by not using colons to
+    define column alignment, and using a "+" sign to indicate line
+    intersections:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ...                ["strings", "numbers"], "orgtbl"))
+    | strings   |   numbers |
+    |-----------+-----------|
+    | spam      |   41.9999 |
+    | eggs      |  451      |
+
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="orgtbl"))
+    | spam |  41.9999 |
+    | eggs | 451      |
+
+    "rst" is like a simple table format from reStructuredText; please
+    note that reStructuredText accepts also "grid" tables:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ...                ["strings", "numbers"], "rst"))
+    =========  =========
+    strings      numbers
+    =========  =========
+    spam         41.9999
+    eggs        451
+    =========  =========
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="rst"))
+    ====  ========
+    spam   41.9999
+    eggs  451
+    ====  ========
+
+    "mediawiki" produces a table markup used in Wikipedia and on other
+    MediaWiki-based sites:
+
+    >>> print(tabulate([["strings", "numbers"], ["spam", 41.9999], ["eggs", "451.0"]],
+    ...                headers="firstrow", tablefmt="mediawiki"))
+    {| class="wikitable" style="text-align: left;"
+    |+ <!-- caption -->
+    |-
+    ! strings   !! align="right"|   numbers
+    |-
+    | spam      || align="right"|   41.9999
+    |-
+    | eggs      || align="right"|  451
+    |}
+
+    "html" produces HTML markup:
+
+    >>> print(tabulate([["strings", "numbers"], ["spam", 41.9999], ["eggs", "451.0"]],
+    ...                headers="firstrow", tablefmt="html"))
+    <table>
+    <tr><th>strings  </th><th style="text-align: right;">  numbers</th></tr>
+    <tr><td>spam     </td><td style="text-align: right;">  41.9999</td></tr>
+    <tr><td>eggs     </td><td style="text-align: right;"> 451     </td></tr>
+    </table>
+
+    "latex" produces a tabular environment of LaTeX document markup:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="latex"))
+    \\begin{tabular}{lr}
+    \\hline
+     spam &  41.9999 \\\\
+     eggs & 451      \\\\
+    \\hline
+    \\end{tabular}
+
+    "latex_booktabs" produces a tabular environment of LaTeX document markup
+    using the booktabs.sty package:
+
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="latex_booktabs"))
+    \\begin{tabular}{lr}
+    \\toprule
+     spam &  41.9999 \\\\
+     eggs & 451      \\\\
+    \\bottomrule
+    \end{tabular}
+    """
+    if tabular_data is None:
+        tabular_data = []
+    list_of_lists, headers = _normalize_tabular_data(tabular_data, headers)
+
+    # optimization: look for ANSI control codes once,
+    # enable smart width functions only if a control code is found
+    plain_text = '\n'.join(['\t'.join(map(_text_type, headers))] + \
+                            ['\t'.join(map(_text_type, row)) for row in list_of_lists])
+    has_invisible = re.search(_invisible_codes, plain_text)
+    if has_invisible:
+        width_fn = _visible_width
+    else:
+        width_fn = len
+   
 
